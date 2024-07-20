@@ -47,6 +47,8 @@ module.exports = {
     'react-hooks/exhaustive-deps': 1,
     // TypeScript에서 'any' 타입의 명시적 사용을 허용
     '@typescript-eslint/no-explicit-any': 0,
+    '@typescript-eslint/no-unused-vars': 0,
+    '@typescript-eslint/no-var-requires': 0,
   },
 
   // ESLint 규칙에서 사용할 추가적인 설정. 여기서는 React 버전을 자동으로 감지하도록 설정한다.
