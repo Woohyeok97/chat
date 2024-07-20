@@ -1,5 +1,3 @@
-// // 서버 설정 파일 (예: index.js)
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
