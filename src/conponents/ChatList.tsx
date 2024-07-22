@@ -2,6 +2,7 @@
 import { css } from '@emotion/react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getChatList } from '../remotes/remotes';
+import Avatar from './shared/Avatar';
 import { Flex } from './shared/Flex';
 import { Header } from './shared/Header';
 import { Spacing } from './shared/Spacing';
@@ -22,12 +23,14 @@ export default function ChatList({ currentUser, onClick }: ChatListProps) {
   return (
     <div
       css={css`
-        padding: 20px 40px;
-        border: 1px solid gray;
-        height: 100%;
+        padding-right: 40px;
+        border-right: 1px solid gray;
+        @media (max-width: 768px) {
+          display: none;
+        }
       `}
     >
-      <Header>접속중 : {currentUser}</Header>
+      <Header>{currentUser}</Header>
       <Spacing size={20} />
       <Flex direction="column" gap={10}>
         {chatList.map(item => (
@@ -35,11 +38,14 @@ export default function ChatList({ currentUser, onClick }: ChatListProps) {
             key={item}
             onClick={() => onClick([currentUser, item].sort().join('-'))}
             css={css`
+              display: flex;
+              align-items: center;
               cursor: pointer;
-              padding: 10px;
+              gap: 5px;
             `}
           >
-            {item}님과 대화
+            <Avatar />
+            <div css={css``}>{item}님</div>
           </div>
         ))}
       </Flex>

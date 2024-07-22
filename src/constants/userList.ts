@@ -1,1 +1,1 @@
-export const USERLIST = ['플라워1', '플라워2', '플라워3'];
+export const USERLIST = ['리틀잼', '만천홍', '호접란'];

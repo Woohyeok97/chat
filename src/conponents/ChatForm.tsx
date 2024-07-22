@@ -1,7 +1,10 @@
+/** @jsxImportSource @emotion/react */
+import { css } from '@emotion/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { getMessageListByRoomId, MessageType, updateMessageListByRoomId } from '../remotes/remotes';
+import MessageBox from './MessageBox';
 // components
 import { Button } from './shared/Button';
 import { Flex } from './shared/Flex';
@@ -86,8 +89,19 @@ export default function ChatForm({ currentRoomId, currentUser }: ChatFormProps) 
 
   if (!currentRoomId) {
     return (
-      <div>
-        <h2>채팅방을 선택하세요</h2>
+      <div
+        css={css`
+          display: flex;
+          flex: 1;
+          gap: 20px;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+        `}
+      >
+        <Header>FLOWER 119</Header>
+        <div>다른 회원님들과 채팅을 시작해보세요.</div>
       </div>
     );
   }
@@ -95,13 +109,17 @@ export default function ChatForm({ currentRoomId, currentUser }: ChatFormProps) 
   return (
     <Flex direction="column" flex="auto" justify="space-between">
       <div>
-        <Header>{currentRoomId} 님과의 대화</Header>
+        <div
+          css={css`
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+          `}
+        >
+          {currentRoomId.split('-').join('').split(currentUser).join('')}님
+        </div>
         <Spacing size={20} />
         {messageList?.map((item, i) => (
-          <div key={i}>
-            <span>{item.name} :</span>
-            <span>{item.text}</span>
-          </div>
+          <MessageBox key={i} message={item} currentUser={currentUser} />
         ))}
       </div>
       <div>

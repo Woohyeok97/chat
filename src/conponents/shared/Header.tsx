@@ -11,7 +11,7 @@ export function Header({ children }: HeaderProps) {
 const HeaderStyles = css`
   color: black;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.5rem;
 `;
 
 // /** @jsxImportSource @emotion/react */

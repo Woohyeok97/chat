@@ -1,5 +1,7 @@
+/** @jsxImportSource @emotion/react */
 import { Suspense, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { css } from '@emotion/react';
 import ChatForm from '../conponents/ChatForm';
 import ChatList from '../conponents/ChatList';
 import { Flex } from '../conponents/shared/Flex';
@@ -13,7 +15,15 @@ export default function Chat() {
   };
 
   return (
-    <Flex gap={20} height="100%">
+    <Flex
+      css={css`
+        display: flex;
+        height: 100%;
+        width: 100%;
+        gap: 30px;
+        box-sizing: border-box;
+      `}
+    >
       <Suspense>
         <ChatList onClick={handleRoomSelection} currentUser={currentUser!} />
       </Suspense>
