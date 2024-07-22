@@ -1,7 +1,7 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { io } from 'socket.io-client';
-import { chatStateFamily } from '../recoil/atom';
+import { getMessageListByRoomId, MessageType, updateMessageListByRoomId } from '../remotes/remotes';
 // components
 import { Button } from './shared/Button';
 import { Flex } from './shared/Flex';
@@ -14,49 +14,75 @@ const socket = io('http://localhost:4000/chat');
 interface ChatFormProps {
   currentRoomId: string;
   currentUser: string;
-  targetUser: string;
 }
-interface Re {
+interface MessageResponse {
   name: string;
   text: string;
   roomId: string;
 }
-export default function ChatForm({ currentRoomId, currentUser, targetUser }: ChatFormProps) {
+export default function ChatForm({ currentRoomId, currentUser }: ChatFormProps) {
   const [message, setMessage] = useState('');
-  const chat = useRecoilValue(chatStateFamily(currentRoomId));
+  const queryClient = useQueryClient();
 
-  const setChat = useRecoilCallback(({ set }) => (value: Re) => {
-    set(chatStateFamily(value.roomId), prev => [...prev, { name: value.name, text: value.text }]);
+  const { data: messageList } = useQuery({
+    queryKey: ['messageList', currentRoomId],
+    queryFn: () => getMessageListByRoomId(currentRoomId),
+    enabled: !!currentRoomId,
   });
 
+  // 웹소켓 메시지 응답 핸들러
+  const { mutate } = useMutation({
+    onMutate: (response: MessageResponse) => {
+      // 웹소켓 메시지의 룸을 보고 있을때만 캐시 데이터 선 업데이트(리렌더링 최소화)
+      if (currentRoomId === response.roomId) {
+        console.log('change');
+        queryClient.setQueryData(['messageList', response.roomId], (prev: MessageType[]) => [
+          ...prev,
+          { name: response.name, text: response.text },
+        ]);
+      }
+    },
+    // 웹소켓 메시지를 보낼때만 JSON 데이터 업데이트(DB 업데이트) -> 중복 업데이트 방지
+    mutationFn: async (response: MessageResponse) => {
+      if (response.name === currentUser) {
+        await updateMessageListByRoomId({
+          roomId: response.roomId,
+          message: { name: response.name, text: response.text },
+        });
+      }
+    },
+  });
+
+  // 웹소켓 메시지 서브밋 핸들러
+  const handleSubmit = () => {
+    socket.emit('message', {
+      roomId: currentRoomId,
+      message,
+      name: currentUser,
+      target: currentRoomId.split('-').join('').split(currentUser).join(''),
+    });
+    setMessage('');
+  };
+
   useEffect(() => {
-    // 유저풀 등록
-    socket.emit('register', { name: currentUser, roomId: currentRoomId });
+    socket.emit('register', { name: currentUser, roomId: currentRoomId }); // 유저풀 등록
 
     // 특정 룸에 조인 (user: currentUser는 확인용)
     if (currentRoomId) {
       socket.emit('joinRoom', { roomId: currentRoomId, name: currentUser });
     }
 
-    socket.on('message', msg => {
-      console.log('웹소켓 메시지 받음!', msg);
-      setChat(msg);
+    // 웹소켓 메시지 응답
+    socket.on('message', response => {
+      console.log('웹소켓 메시지 받음!', response);
+      mutate(response);
     });
 
+    // 웹소켓 연결 해제
     return () => {
       socket.off('message');
     };
-  }, [currentRoomId, currentUser, setChat]);
-
-  const sendMessage = () => {
-    socket.emit('message', {
-      roomId: currentRoomId,
-      message,
-      name: currentUser,
-      target: targetUser,
-    });
-    setMessage('');
-  };
+  }, [currentRoomId, currentUser, mutate]);
 
   if (!currentRoomId) {
     return (
@@ -71,7 +97,7 @@ export default function ChatForm({ currentRoomId, currentUser, targetUser }: Cha
       <div>
         <Header>{currentRoomId} 님과의 대화</Header>
         <Spacing size={20} />
-        {chat.map((item, i) => (
+        {messageList?.map((item, i) => (
           <div key={i}>
             <span>{item.name} :</span>
             <span>{item.text}</span>
@@ -85,7 +111,7 @@ export default function ChatForm({ currentRoomId, currentUser, targetUser }: Cha
           onChange={e => setMessage(e.target.value)}
         />
         <Flex direction="row-reverse">
-          <Button onClick={sendMessage}>전송</Button>
+          <Button onClick={handleSubmit}>전송</Button>
         </Flex>
       </div>
     </Flex>

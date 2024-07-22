@@ -1,17 +1,23 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
-import { USERLIST } from '../constants/userList';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { getChatList } from '../remotes/remotes';
 import { Flex } from './shared/Flex';
 import { Header } from './shared/Header';
 import { Spacing } from './shared/Spacing';
 
 interface ChatListProps {
   currentUser: string;
-  onClick: (rommid: string) => void;
+  onClick: (roomId: string) => void;
 }
 
 export default function ChatList({ currentUser, onClick }: ChatListProps) {
-  const chatList = USERLIST.filter(item => item !== currentUser);
+  const { data } = useSuspenseQuery({
+    queryKey: ['usersChatList'],
+    queryFn: () => getChatList(currentUser),
+  });
+
+  const chatList = data.map(item => item.roomId.split('-').join('').split(currentUser).join(''));
 
   return (
     <div
@@ -27,7 +33,7 @@ export default function ChatList({ currentUser, onClick }: ChatListProps) {
         {chatList.map(item => (
           <div
             key={item}
-            onClick={() => onClick(item)}
+            onClick={() => onClick([currentUser, item].sort().join('-'))}
             css={css`
               cursor: pointer;
               padding: 10px;
