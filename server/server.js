@@ -19,30 +19,31 @@ const userList = {};
 
 chat.on('connection', socket => {
   // 유저풀 등록
-  socket.on('register', ({ user, roomId }) => {
-    userList[user] = {
+  socket.on('register', ({ name, roomId }) => {
+    userList[name] = {
       id: socket.id,
       roomId: roomId,
     };
-    console.log(`${user}님이 등록되었습니다.:`, userList);
+    console.log(`${name}님이 등록되었습니다.:`, userList);
   });
 
   // 룸 조인 요청시, 룸에 집어넣음
-  socket.on('joinRoom', ({ roomId, user }) => {
+  socket.on('joinRoom', ({ roomId, name }) => {
     socket.join(roomId);
-    console.log(`${user}님이 ${roomId} 룸에 입장했습니다.`);
+    console.log(`${name}님이 ${roomId} 룸에 입장했습니다.`);
   });
 
   // 메시지 처리
-  socket.on('message', ({ roomId, message, user, target }) => {
-    console.log(`${user}: ${message} (룸: ${roomId}, target: ${target})`);
+  socket.on('message', ({ roomId, message, name, target }) => {
+    console.log(`${name}: ${message} (룸: ${roomId}, target: ${target})`);
     // 타겟 유저가 룸에 조인하지 않았다면 초대
-    if (!userList[target].roomId) {
+    // if (!userList[target].roomId) {
+    if (userList[target].roomId !== userList[name].roomId) {
       chat.sockets.get(userList[target].id).join(roomId);
       console.log(`${target}님이 ${roomId} 룸에 초대되었습니다.`);
     }
     // 룸에 메시지 보냄
-    chat.to(roomId).emit('message', { user, text: message });
+    chat.to(roomId).emit('message', { name, text: message, roomId });
   });
 
   socket.on('disconnect', () => {

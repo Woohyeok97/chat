@@ -1,11 +1,24 @@
-import { atom } from 'recoil';
+// import { atom } from 'recoil';
 
-export interface UserStateType {
-  name: '플라워1' | '플라워2' | '플라워3';
+// export interface ChatStateType {
+//   roomId: string;
+//   messageList: {
+//     name: string;
+//     text: string;
+//   }[];
+// }
+// export const chatState = atom<ChatStateType[]>({
+//   key: 'chatState',
+//   default: [],
+// });
+
+import { atomFamily } from 'recoil';
+
+export interface ChatStateType {
+  name: string;
+  text: string;
 }
-export const userState = atom<UserStateType>({
-  key: 'userState',
-  default: {
-    name: '플라워1',
-  },
+export const chatStateFamily = atomFamily<ChatStateType[], string>({
+  key: 'chatStateFamily ',
+  default: [],
 });

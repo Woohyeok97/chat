@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { useRecoilCallback, useRecoilValue } from 'recoil';
 import { io } from 'socket.io-client';
+import { chatStateFamily } from '../recoil/atom';
 // components
 import { Button } from './shared/Button';
 import { Flex } from './shared/Flex';
@@ -10,39 +12,53 @@ import { TextField } from './shared/TextField';
 const socket = io('http://localhost:4000/chat');
 
 interface ChatFormProps {
-  roomId: string;
+  currentRoomId: string;
   currentUser: string;
   targetUser: string;
 }
-export default function ChatForm({ roomId, currentUser, targetUser }: ChatFormProps) {
+interface Re {
+  name: string;
+  text: string;
+  roomId: string;
+}
+export default function ChatForm({ currentRoomId, currentUser, targetUser }: ChatFormProps) {
   const [message, setMessage] = useState('');
-  const [chat, setChat] = useState<{ user: string; text: string }[]>([]);
+  const chat = useRecoilValue(chatStateFamily(currentRoomId));
+
+  const setChat = useRecoilCallback(({ set }) => (value: Re) => {
+    set(chatStateFamily(value.roomId), prev => [...prev, { name: value.name, text: value.text }]);
+  });
 
   useEffect(() => {
     // 유저풀 등록
-    socket.emit('register', { user: currentUser, roomId });
+    socket.emit('register', { name: currentUser, roomId: currentRoomId });
 
     // 특정 룸에 조인 (user: currentUser는 확인용)
-    if (roomId) {
-      socket.emit('joinRoom', { roomId, user: currentUser });
+    if (currentRoomId) {
+      socket.emit('joinRoom', { roomId: currentRoomId, name: currentUser });
     }
 
     socket.on('message', msg => {
       console.log('웹소켓 메시지 받음!', msg);
-      setChat(prev => [...prev, msg]);
+      setChat(msg);
     });
 
     return () => {
       socket.off('message');
     };
-  }, [roomId, currentUser]);
+  }, [currentRoomId, currentUser, setChat]);
 
   const sendMessage = () => {
-    socket.emit('message', { roomId, message, user: currentUser, target: targetUser });
+    socket.emit('message', {
+      roomId: currentRoomId,
+      message,
+      name: currentUser,
+      target: targetUser,
+    });
     setMessage('');
   };
 
-  if (!roomId) {
+  if (!currentRoomId) {
     return (
       <div>
         <h2>채팅방을 선택하세요</h2>
@@ -53,11 +69,11 @@ export default function ChatForm({ roomId, currentUser, targetUser }: ChatFormPr
   return (
     <Flex direction="column" flex="auto" justify="space-between">
       <div>
-        <Header>{roomId} 님과의 대화</Header>
+        <Header>{currentRoomId} 님과의 대화</Header>
         <Spacing size={20} />
         {chat.map((item, i) => (
           <div key={i}>
-            <span>{item.user} :</span>
+            <span>{item.name} :</span>
             <span>{item.text}</span>
           </div>
         ))}

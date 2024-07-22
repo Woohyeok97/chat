@@ -50,6 +50,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 0,
     '@typescript-eslint/no-var-requires': 0,
     'react/no-unknown-property': ['error', { ignore: ['css'] }],
+    'no-unsafe-optional-chaining': 0,
   },
 
   // ESLint 규칙에서 사용할 추가적인 설정. 여기서는 React 버전을 자동으로 감지하도록 설정한다.

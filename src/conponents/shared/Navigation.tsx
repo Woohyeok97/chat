@@ -1,10 +1,8 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
 import { useNavigate } from 'react-router-dom';
-// import { useRecoilState } from 'recoil';
-import { userState, UserStateType } from '../../recoil/atom';
 
-const USERLIST: UserStateType['name'][] = ['플라워1', '플라워2', '플라워3'];
+const USERLIST = ['플라워1', '플라워2', '플라워3'];
 
 export default function Navigation() {
   // const [user, setUser] = useRecoilState(userState);
